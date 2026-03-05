@@ -10,6 +10,7 @@ import { transcribeAudio } from "./_core/voiceTranscription";
  * Text Labeling Results
  */
 export interface TextLabelingResult {
+  category?: string; // Primary category from classification
   sentiment?: string; // positive, negative, neutral
   entities?: Array<{ type: string; value: string; confidence: number }>;
   classification?: { category: string; confidence: number };
@@ -534,6 +535,7 @@ export async function labelText(text: string, taxonomyLabels: string[]): Promise
     ]);
 
     return {
+      category: classification.category,
       sentiment: sentiment.sentiment,
       entities: entities.entities,
       classification,

@@ -46,6 +46,7 @@
 - [x] Fix batch API to work with API keys and submissions
 - [x] Fix JSON object rendering in results viewer
 - [x] Update label extraction to show only category field
+- [x] Debug label display showing neutral instead of category values
 - [ ] Build label review and editing interface
 
 ## Phase 6: Notifications and Testing

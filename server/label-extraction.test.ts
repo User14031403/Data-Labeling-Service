@@ -29,9 +29,14 @@ describe("Label Extraction", () => {
     expect(extractLabel("neutral")).toBe("neutral");
   });
 
-  it("should prioritize category field over others", () => {
-    const obj = { category: "product", label: "positive", confidence: 0.95 };
-    expect(extractLabel(obj)).toBe("product");
+  it("should extract category as primary field", () => {
+    const obj = { category: "theorem", sentiment: "positive", confidence: 0.95 };
+    expect(extractLabel(obj)).toBe("theorem");
+  });
+
+  it("should extract category from text labeling result", () => {
+    const obj = { category: "operation", sentiment: "neutral", entities: [], confidence: 0.92 };
+    expect(extractLabel(obj)).toBe("operation");
   });
 
   it("should extract label field when category not present", () => {
