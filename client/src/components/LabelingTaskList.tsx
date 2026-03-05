@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, AlertCircle, Clock, Eye } from "lucide-react";
 
 interface LabelingTask {
   id: number;
@@ -21,9 +22,10 @@ interface LabelingTask {
 interface LabelingTaskListProps {
   tasks: LabelingTask[];
   status: "active" | "completed" | "failed";
+  onViewResults?: (taskId: number) => void;
 }
 
-export default function LabelingTaskList({ tasks, status }: LabelingTaskListProps) {
+export default function LabelingTaskList({ tasks, status, onViewResults }: LabelingTaskListProps) {
   const getStatusIcon = (taskStatus: string) => {
     switch (taskStatus) {
       case "completed":
@@ -102,10 +104,23 @@ export default function LabelingTaskList({ tasks, status }: LabelingTaskListProp
                   />
                 </div>
               </div>
-              <div className="flex justify-between text-xs text-slate-500">
-                <span>Created {new Date(task.createdAt).toLocaleDateString()}</span>
-                {task.completedAt && (
-                  <span>Completed {new Date(task.completedAt).toLocaleDateString()}</span>
+              <div className="flex justify-between items-center text-xs text-slate-500">
+                <div>
+                  <span>Created {new Date(task.createdAt).toLocaleDateString()}</span>
+                  {task.completedAt && (
+                    <span className="ml-4">Completed {new Date(task.completedAt).toLocaleDateString()}</span>
+                  )}
+                </div>
+                {status === "completed" && onViewResults && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onViewResults(task.id)}
+                    className="gap-1"
+                  >
+                    <Eye className="w-3 h-3" />
+                    View Results
+                  </Button>
                 )}
               </div>
             </div>

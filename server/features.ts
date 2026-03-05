@@ -30,6 +30,7 @@ import { cleanDatasetItem, removeDuplicateTexts } from "./cleaning";
 import { labelText, labelImage, labelAudio } from "./labeling";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut, storageGet } from "./storage";
+import { getTaskResults } from "./labeling-results";
 
 /**
  * Dataset Procedures
@@ -286,6 +287,8 @@ export const labelingRouter = router({
     const tasks = await getUserLabelingTasks(ctx.user.id);
     return tasks;
   }),
+
+  getTaskResults,
 });
 
 /**

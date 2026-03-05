@@ -8,11 +8,14 @@ import { Plus, Play, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import CreateLabelingTaskDialog from "@/components/CreateLabelingTaskDialog";
 import LabelingTaskList from "@/components/LabelingTaskList";
+import TaskResultsDialog from "@/components/TaskResultsDialog";
 
 export default function LabelingTasksPage() {
   const { isAuthenticated } = useAuth();
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [activeTab, setActiveTab] = useState("active");
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [showResults, setShowResults] = useState(false);
 
   // Fetch all tasks
   const { data: allTasks, refetch } = trpc.labeling.getAllTasks.useQuery(undefined, {
@@ -124,7 +127,14 @@ export default function LabelingTasksPage() {
           {/* Completed Tasks */}
           <TabsContent value="completed" className="space-y-6">
             {completedTasks.length > 0 ? (
-              <LabelingTaskList tasks={completedTasks} status="completed" />
+              <LabelingTaskList
+                tasks={completedTasks}
+                status="completed"
+                onViewResults={(taskId) => {
+                  setSelectedTaskId(taskId);
+                  setShowResults(true);
+                }}
+              />
             ) : (
               <Card>
                 <CardContent className="pt-6">
@@ -183,11 +193,19 @@ export default function LabelingTasksPage() {
         onOpenChange={(open) => {
           setShowCreateTask(open);
           if (!open) {
-            // Refetch tasks when dialog closes
             refetch();
           }
         }}
       />
+
+      {/* Task Results Dialog */}
+      {selectedTaskId && (
+        <TaskResultsDialog
+          open={showResults}
+          onOpenChange={setShowResults}
+          taskId={selectedTaskId}
+        />
+      )}
     </div>
   );
 }

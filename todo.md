@@ -40,7 +40,8 @@
 - [x] Build labeling task creation and review interface
 - [x] Build batch API documentation page with curl examples
 - [x] Implement dynamic task display (active/completed/failed tabs with auto-refresh)
-- [ ] Build export functionality (JSON, CSV)
+- [x] Build task results viewer to show labeled data with export (JSON/CSV)
+- [x] Build export functionality (JSON, CSV)
 - [ ] Build label review and editing interface
 
 ## Phase 6: Notifications and Testing
