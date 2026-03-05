@@ -31,6 +31,7 @@ import { labelText, labelImage, labelAudio } from "./labeling";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut, storageGet } from "./storage";
 import { getTaskResults } from "./labeling-results";
+import { queueLabelingJob } from "./job-processor";
 
 /**
  * Dataset Procedures
@@ -225,45 +226,11 @@ export const labelingRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const taxonomy = await getLabelTaxonomy(task.taxonomyId);
-      if (!taxonomy[0]) throw new TRPCError({ code: "NOT_FOUND" });
+      // Queue the labeling task to run in background
+      // This allows multiple tasks to be processed concurrently
+      queueLabelingJob(input.taskId);
 
-      const items = await getDatasetItems(task.datasetId);
-      const taxonomyLabels = JSON.parse(taxonomy[0].labels);
-
-      // Run labeling in background (simplified - in production use job queue)
-      let processedCount = 0;
-      for (const item of items) {
-        try {
-          let labelResult: any;
-
-          if (dataset[0]?.dataType === "text" && item.content) {
-            labelResult = await labelText(item.content, taxonomyLabels);
-          } else if (dataset[0]?.dataType === "image" && item.fileUrl) {
-            labelResult = await labelImage(item.fileUrl, taxonomyLabels);
-          } else if (dataset[0]?.dataType === "audio" && item.fileUrl) {
-            labelResult = await labelAudio(item.fileUrl, taxonomyLabels);
-          }
-
-          if (labelResult) {
-            await createLabel({
-              itemId: item.id,
-              taskId: input.taskId,
-              predictedLabel: JSON.stringify(labelResult),
-              confidence: Math.round(labelResult.confidence),
-              source: "ai",
-            });
-          }
-
-          processedCount++;
-          await updateLabelingTaskProgress(input.taskId, processedCount, "processing");
-        } catch (error) {
-          console.error(`Error labeling item ${item.id}:`, error);
-        }
-      }
-
-      await updateLabelingTaskProgress(input.taskId, processedCount, "completed");
-      return { success: true, processedCount };
+      return { success: true, message: "Labeling task queued for processing" };
     }),
 
   updateLabel: protectedProcedure

@@ -66,7 +66,7 @@ export default function CreateLabelingTaskDialog({
 
   const runMutation = trpc.labeling.runLabeling.useMutation({
     onSuccess: (result) => {
-      toast.success(`Labeling complete! Processed ${result.processedCount} items`);
+      toast.success(result.message || "Labeling task queued for processing");
       utils.labeling.getTask.invalidate();
       setIsRunning(false);
     },
