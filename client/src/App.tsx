@@ -7,6 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import TaxonomyPage from "./pages/TaxonomyPage";
+import LabelingTasksPage from "./pages/LabelingTasksPage";
+import BatchAPIPage from "./pages/BatchAPIPage";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -15,6 +17,8 @@ function Router() {
       <Route path={"\\"} component={Home} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/taxonomy"} component={TaxonomyPage} />
+      <Route path={"/labeling-tasks"} component={LabelingTasksPage} />
+      <Route path={"/batch-api"} component={BatchAPIPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

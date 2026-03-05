@@ -37,9 +37,10 @@
 - [x] Create dataset dialog
 - [x] Build upload items dialog
 - [x] Build taxonomy management page with create/list UI
-- [ ] Build labeling task creation and review interface
+- [x] Build labeling task creation and review interface
+- [x] Build batch API documentation page with curl examples
 - [ ] Build export functionality (JSON, CSV)
-- [ ] Build batch API documentation page
+- [ ] Build label review and editing interface
 
 ## Phase 6: Notifications and Testing
 - [ ] Implement in-app notifications for task completion

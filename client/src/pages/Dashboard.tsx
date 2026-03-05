@@ -146,7 +146,13 @@ export default function Dashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">Task management interface coming soon...</p>
+                <Button
+                  onClick={() => navigate("/labeling-tasks")}
+                  className="gap-2 bg-black hover:bg-slate-800 text-white"
+                >
+                  <Settings className="w-4 h-4" />
+                  Go to Labeling Tasks
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -157,14 +163,17 @@ export default function Dashboard() {
               <CardHeader>
                 <CardTitle>Batch API</CardTitle>
                 <CardDescription>
-                  Submit large batches of data for automated labeling via REST API
+                  Submit large datasets via REST API for automated processing
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-slate-50 p-4 rounded border border-slate-200 font-mono text-sm">
-                  <p className="text-slate-600">POST /api/trpc/batch.submitBatch</p>
-                </div>
-                <p className="text-slate-600">API documentation and examples coming soon...</p>
+              <CardContent>
+                <Button
+                  onClick={() => navigate("/batch-api")}
+                  className="gap-2 bg-black hover:bg-slate-800 text-white"
+                >
+                  <Settings className="w-4 h-4" />
+                  View API Documentation
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
