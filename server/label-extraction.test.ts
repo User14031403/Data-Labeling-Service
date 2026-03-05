@@ -7,11 +7,12 @@ function extractLabel(label: any): string {
   if (typeof label === "boolean") return String(label);
   if (typeof label === "number") return String(label);
   if (typeof label === "object") {
-    // Try common label field names
+    // Prioritize category field for display
+    if (label.category) return label.category;
+    // Fallback to other common label field names
     if (label.label) return label.label;
     if (label.sentiment) return label.sentiment;
     if (label.classification) return label.classification;
-    if (label.category) return label.category;
     // Fallback: return first non-object value
     for (const [key, value] of Object.entries(label)) {
       if (typeof value === "string") return value;
@@ -28,24 +29,24 @@ describe("Label Extraction", () => {
     expect(extractLabel("neutral")).toBe("neutral");
   });
 
-  it("should extract label from object with label field", () => {
+  it("should prioritize category field over others", () => {
+    const obj = { category: "product", label: "positive", confidence: 0.95 };
+    expect(extractLabel(obj)).toBe("product");
+  });
+
+  it("should extract label field when category not present", () => {
     const obj = { label: "positive", confidence: 0.95 };
     expect(extractLabel(obj)).toBe("positive");
   });
 
-  it("should extract sentiment from object with sentiment field", () => {
+  it("should extract sentiment when category and label not present", () => {
     const obj = { sentiment: "positive", entities: [], confidence: 0.95 };
     expect(extractLabel(obj)).toBe("positive");
   });
 
-  it("should extract classification from object with classification field", () => {
+  it("should extract classification when other fields not present", () => {
     const obj = { classification: "spam", confidence: 0.88 };
     expect(extractLabel(obj)).toBe("spam");
-  });
-
-  it("should extract category from object with category field", () => {
-    const obj = { category: "product", confidence: 0.92 };
-    expect(extractLabel(obj)).toBe("product");
   });
 
   it("should handle complex labeling object with multiple fields", () => {
@@ -76,10 +77,10 @@ describe("Label Extraction", () => {
 
   it("should handle nested objects", () => {
     const obj = {
-      label: "positive",
+      category: "product",
       metadata: { nested: { value: "ignored" } },
     };
-    expect(extractLabel(obj)).toBe("positive");
+    expect(extractLabel(obj)).toBe("product");
   });
 
   it("should handle numeric values", () => {

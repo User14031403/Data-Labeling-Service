@@ -33,11 +33,12 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
     if (typeof label === "boolean") return String(label);
     if (typeof label === "number") return String(label);
     if (typeof label === "object") {
-      // Try common label field names
+      // Prioritize category field for display
+      if (label.category) return label.category;
+      // Fallback to other common label field names
       if (label.label) return label.label;
       if (label.sentiment) return label.sentiment;
       if (label.classification) return label.classification;
-      if (label.category) return label.category;
       // Fallback: return first non-object value
       for (const [key, value] of Object.entries(label)) {
         if (typeof value === "string") return value;
