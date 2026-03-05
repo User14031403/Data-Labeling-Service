@@ -1,16 +1,18 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Upload, Settings } from "lucide-react";
+import { Plus, Upload, Settings, Tag } from "lucide-react";
 import DatasetList from "@/components/DatasetList";
 import CreateDatasetDialog from "@/components/CreateDatasetDialog";
 import UploadItemsDialog from "@/components/UploadItemsDialog";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const [showCreateDataset, setShowCreateDataset] = useState(false);
   const [showUploadItems, setShowUploadItems] = useState(false);
   const [selectedDatasetId, setSelectedDatasetId] = useState<number | null>(null);
@@ -59,8 +61,9 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <Tabs defaultValue="datasets" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="datasets">Datasets</TabsTrigger>
+            <TabsTrigger value="taxonomy">Taxonomy</TabsTrigger>
             <TabsTrigger value="tasks">Labeling Tasks</TabsTrigger>
             <TabsTrigger value="api">Batch API</TabsTrigger>
           </TabsList>
@@ -107,6 +110,30 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Taxonomy Tab */}
+          <TabsContent value="taxonomy">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Tag className="w-5 h-5" />
+                  Label Taxonomy Management
+                </CardTitle>
+                <CardDescription>
+                  Define and manage label categories for your AI labeling tasks
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate("/taxonomy")}
+                  className="gap-2 bg-black hover:bg-slate-800 text-white"
+                >
+                  <Settings className="w-4 h-4" />
+                  Go to Taxonomy Manager
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Tasks Tab */}

@@ -34,10 +34,10 @@
 - [x] Create home page with technical blueprint design
 - [x] Build dashboard layout with tabs
 - [x] Build dataset list component
-- [x] Build create dataset dialog
+- [x] Create dataset dialog
 - [x] Build upload items dialog
+- [x] Build taxonomy management page with create/list UI
 - [ ] Build labeling task creation and review interface
-- [ ] Build taxonomy management page
 - [ ] Build export functionality (JSON, CSV)
 - [ ] Build batch API documentation page
 
