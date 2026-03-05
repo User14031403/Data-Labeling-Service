@@ -44,6 +44,7 @@
 - [x] Build export functionality (JSON, CSV)
 - [x] Simplify results display to show only category labels
 - [x] Fix batch API to work with API keys and submissions
+- [x] Fix JSON object rendering in results viewer
 - [ ] Build label review and editing interface
 
 ## Phase 6: Notifications and Testing

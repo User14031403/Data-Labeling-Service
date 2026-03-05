@@ -27,13 +27,33 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const extractLabel = (label: any): string => {
+    if (label === null || label === undefined) return "";
+    if (typeof label === "string") return label;
+    if (typeof label === "boolean") return String(label);
+    if (typeof label === "number") return String(label);
+    if (typeof label === "object") {
+      // Try common label field names
+      if (label.label) return label.label;
+      if (label.sentiment) return label.sentiment;
+      if (label.classification) return label.classification;
+      if (label.category) return label.category;
+      // Fallback: return first non-object value
+      for (const [key, value] of Object.entries(label)) {
+        if (typeof value === "string") return value;
+      }
+      return JSON.stringify(label);
+    }
+    return String(label);
+  };
+
   const handleExportJSON = () => {
     if (!results) return;
     const json = JSON.stringify(
       results.results.map((r: any) => ({
         itemId: r.itemId,
         content: r.content || r.fileUrl || "",
-        label: typeof r.predictedLabel === "object" ? r.predictedLabel.label || r.predictedLabel : r.predictedLabel,
+        label: extractLabel(r.manualLabel || r.predictedLabel),
         manualLabel: r.manualLabel || null,
       })),
       null,
@@ -55,7 +75,7 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
     const rows = results.results.map((r: any) => [
       r.itemId,
       r.content || r.fileUrl || "",
-      typeof r.predictedLabel === "object" ? r.predictedLabel.label || JSON.stringify(r.predictedLabel) : r.predictedLabel,
+      extractLabel(r.manualLabel || r.predictedLabel),
     ]);
 
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -134,7 +154,7 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
                   </thead>
                   <tbody>
                     {results.results.map((result: any, index: number) => {
-                      const label = result.manualLabel || (typeof result.predictedLabel === "object" ? result.predictedLabel.label || result.predictedLabel : result.predictedLabel);
+                      const label = extractLabel(result.manualLabel || result.predictedLabel);
                       return (
                         <tr key={result.itemId} className="border-b hover:bg-slate-50">
                           <td className="px-4 py-2 text-slate-600">#{index + 1}</td>
