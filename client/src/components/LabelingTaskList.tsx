@@ -6,11 +6,16 @@ interface LabelingTask {
   id: number;
   name: string;
   description: string | null;
-  status: "pending" | "running" | "completed" | "failed";
-  processedCount: number;
-  totalCount: number;
+  status: "pending" | "running" | "completed" | "failed" | "processing";
+  processedItems?: number;
+  progress?: number;
+  totalItems?: number;
   createdAt: Date;
-  completedAt: Date | null;
+  completedAt?: Date | null;
+  updatedAt?: Date;
+  datasetId?: number;
+  taxonomyId?: number;
+  createdBy?: number;
 }
 
 interface LabelingTaskListProps {
@@ -81,7 +86,7 @@ export default function LabelingTaskList({ tasks, status }: LabelingTaskListProp
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-slate-600">Progress</span>
                   <span className="font-mono text-slate-700">
-                    {task.processedCount} / {task.totalCount}
+                    {task.processedItems || 0} / {task.totalItems || 0}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2">
@@ -89,8 +94,8 @@ export default function LabelingTaskList({ tasks, status }: LabelingTaskListProp
                     className="bg-cyan-500 h-2 rounded-full transition-all"
                     style={{
                       width: `${
-                        task.totalCount > 0
-                          ? (task.processedCount / task.totalCount) * 100
+                        (task.totalItems || 0) > 0
+                          ? ((task.processedItems || 0) / (task.totalItems || 0)) * 100
                           : 0
                       }%`,
                     }}

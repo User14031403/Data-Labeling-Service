@@ -15,6 +15,7 @@ import {
   createLabelingTask,
   getLabelingTask,
   updateLabelingTaskProgress,
+  getUserLabelingTasks,
   createLabelTaxonomy,
   getLabelTaxonomy,
   getTaxonomiesByDataType,
@@ -279,6 +280,12 @@ export const labelingRouter = router({
       });
       return { success: true };
     }),
+
+  getAllTasks: protectedProcedure.query(async ({ ctx }) => {
+    const { getUserLabelingTasks } = await import("./db");
+    const tasks = await getUserLabelingTasks(ctx.user.id);
+    return tasks;
+  }),
 });
 
 /**

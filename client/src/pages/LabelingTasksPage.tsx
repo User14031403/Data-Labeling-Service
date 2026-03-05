@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,28 @@ export default function LabelingTasksPage() {
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [activeTab, setActiveTab] = useState("active");
 
+  // Fetch all tasks
+  const { data: allTasks, refetch } = trpc.labeling.getAllTasks.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
   const { data: datasets } = trpc.dataset.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+
+  // Auto-refresh tasks every 5 seconds
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      refetch();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refetch]);
+
+  // Filter tasks by status
+  const activeTasks = allTasks?.filter((t) => t.status === "pending" || t.status === "processing") || [];
+  const completedTasks = allTasks?.filter((t) => t.status === "completed") || [];
+  const failedTasks = allTasks?.filter((t) => t.status === "failed") || [];
 
   if (!isAuthenticated) {
     return (
@@ -34,11 +53,14 @@ export default function LabelingTasksPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       {/* Grid background pattern */}
-      <div className="fixed inset-0 opacity-5 pointer-events-none" style={{
-        backgroundImage: `linear-gradient(0deg, transparent 24%, rgba(0,0,0,.05) 25%, rgba(0,0,0,.05) 26%, transparent 27%, transparent 74%, rgba(0,0,0,.05) 75%, rgba(0,0,0,.05) 76%, transparent 77%, transparent),
+      <div
+        className="fixed inset-0 opacity-5 pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(0deg, transparent 24%, rgba(0,0,0,.05) 25%, rgba(0,0,0,.05) 26%, transparent 27%, transparent 74%, rgba(0,0,0,.05) 75%, rgba(0,0,0,.05) 76%, transparent 77%, transparent),
                           linear-gradient(90deg, transparent 24%, rgba(0,0,0,.05) 25%, rgba(0,0,0,.05) 26%, transparent 27%, transparent 74%, rgba(0,0,0,.05) 75%, rgba(0,0,0,.05) 76%, transparent 77%, transparent)`,
-        backgroundSize: "50px 50px"
-      }} />
+          backgroundSize: "50px 50px",
+        }}
+      />
 
       <div className="relative max-w-6xl mx-auto">
         {/* Header */}
@@ -72,49 +94,61 @@ export default function LabelingTasksPage() {
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="active" className="flex items-center gap-2">
               <Play className="w-4 h-4" />
-              Active
+              Active ({activeTasks.length})
             </TabsTrigger>
             <TabsTrigger value="completed" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              Completed
+              Completed ({completedTasks.length})
             </TabsTrigger>
             <TabsTrigger value="failed" className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
-              Failed
+              Failed ({failedTasks.length})
             </TabsTrigger>
           </TabsList>
 
           {/* Active Tasks */}
           <TabsContent value="active" className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-slate-500">
-                  Active tasks will appear here. Create a new task to get started.
-                </p>
-              </CardContent>
-            </Card>
+            {activeTasks.length > 0 ? (
+              <LabelingTaskList tasks={activeTasks} status="active" />
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-slate-500">
+                    No active tasks. Create a new task to get started.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Completed Tasks */}
           <TabsContent value="completed" className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-slate-500">
-                  Completed tasks will appear here with their results.
-                </p>
-              </CardContent>
-            </Card>
+            {completedTasks.length > 0 ? (
+              <LabelingTaskList tasks={completedTasks} status="completed" />
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-slate-500">
+                    No completed tasks yet.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Failed Tasks */}
           <TabsContent value="failed" className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-slate-500">
-                  Failed tasks will appear here with error details.
-                </p>
-              </CardContent>
-            </Card>
+            {failedTasks.length > 0 ? (
+              <LabelingTaskList tasks={failedTasks} status="failed" />
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-slate-500">
+                    No failed tasks.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
 
@@ -137,14 +171,23 @@ export default function LabelingTasksPage() {
               <strong>4. Export:</strong> Download labeled data in JSON or CSV format for model training.
             </p>
             <p className="pt-2 text-cyan-700">
-              Tasks run asynchronously in the background. You'll be notified when labeling is complete.
+              Tasks run asynchronously in the background. You will be notified when labeling is complete.
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Create Task Dialog */}
-      <CreateLabelingTaskDialog open={showCreateTask} onOpenChange={setShowCreateTask} />
+      <CreateLabelingTaskDialog
+        open={showCreateTask}
+        onOpenChange={(open) => {
+          setShowCreateTask(open);
+          if (!open) {
+            // Refetch tasks when dialog closes
+            refetch();
+          }
+        }}
+      />
     </div>
   );
 }

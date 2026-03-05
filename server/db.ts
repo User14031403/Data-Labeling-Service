@@ -172,6 +172,12 @@ export async function updateLabelingTaskProgress(taskId: number, processedItems:
   return db.update(labelingTasks).set(updates).where(eq(labelingTasks.id, taskId));
 }
 
+export async function getUserLabelingTasks(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(labelingTasks).where(eq(labelingTasks.createdBy, userId));
+}
+
 // Label taxonomy queries
 export async function createLabelTaxonomy(input: {
   name: string;
