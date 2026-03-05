@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,16 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
 
   const handleExportJSON = () => {
     if (!results) return;
-    const json = JSON.stringify(results.results, null, 2);
+    const json = JSON.stringify(
+      results.results.map((r: any) => ({
+        itemId: r.itemId,
+        content: r.content || r.fileUrl || "",
+        label: typeof r.predictedLabel === "object" ? r.predictedLabel.label || r.predictedLabel : r.predictedLabel,
+        manualLabel: r.manualLabel || null,
+      })),
+      null,
+      2
+    );
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -43,14 +51,11 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
 
   const handleExportCSV = () => {
     if (!results) return;
-    const headers = ["Item ID", "Content", "Predicted Label", "Confidence", "Manual Label", "Source"];
+    const headers = ["Item ID", "Content", "Label"];
     const rows = results.results.map((r: any) => [
       r.itemId,
       r.content || r.fileUrl || "",
       typeof r.predictedLabel === "object" ? r.predictedLabel.label || JSON.stringify(r.predictedLabel) : r.predictedLabel,
-      r.confidence || "",
-      r.manualLabel || "",
-      r.source || "",
     ]);
 
     const csv = [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -87,21 +92,15 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
                 <CardDescription>{results.task.description}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-slate-600">Total Items</p>
                     <p className="text-2xl font-bold">{results.results.length}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-600">AI Labeled</p>
+                    <p className="text-sm text-slate-600">Labeled</p>
                     <p className="text-2xl font-bold">
-                      {results.results.filter((r: any) => r.source === "ai").length}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Manually Reviewed</p>
-                    <p className="text-2xl font-bold">
-                      {results.results.filter((r: any) => r.manualLabel).length}
+                      {results.results.filter((r: any) => r.predictedLabel || r.manualLabel).length}
                     </p>
                   </div>
                 </div>
@@ -121,94 +120,53 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
             </div>
 
             {/* Results Table */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <h3 className="font-semibold text-slate-900">Labeled Items</h3>
-              {results.results.map((result: any, index: number) => (
-                <Card key={result.itemId} className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm text-slate-600">Item {index + 1}</p>
-                        <p className="font-mono text-sm text-slate-700 break-words">
-                          {result.content || result.fileUrl || `Item #${result.itemId}`}
-                        </p>
-                      </div>
-                      <Badge variant="outline">{result.source === "ai" ? "AI" : "Manual"}</Badge>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Predicted Label */}
-                      <div>
-                        <p className="text-xs text-slate-600 font-semibold mb-1">PREDICTED LABEL</p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-mono bg-slate-50 p-2 rounded border border-slate-200">
-                              {typeof result.predictedLabel === "object"
-                                ? result.predictedLabel.label || JSON.stringify(result.predictedLabel)
-                                : result.predictedLabel || "—"}
-                            </p>
-                          </div>
-                          {result.predictedLabel && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() =>
-                                handleCopyLabel(
-                                  typeof result.predictedLabel === "object"
-                                    ? result.predictedLabel.label || JSON.stringify(result.predictedLabel)
-                                    : result.predictedLabel,
-                                  `pred-${result.itemId}`
-                                )
-                              }
-                            >
-                              {copiedId === `pred-${result.itemId}` ? (
-                                <Check className="w-4 h-4" />
-                              ) : (
-                                <Copy className="w-4 h-4" />
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                        {result.confidence && (
-                          <p className="text-xs text-slate-500 mt-1">
-                            Confidence: {Math.round(result.confidence * 100)}%
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Manual Label */}
-                      <div>
-                        <p className="text-xs text-slate-600 font-semibold mb-1">MANUAL LABEL</p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <p className="text-sm font-mono bg-slate-50 p-2 rounded border border-slate-200">
-                              {result.manualLabel || "—"}
-                            </p>
-                          </div>
-                          {result.manualLabel && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleCopyLabel(result.manualLabel, `manual-${result.itemId}`)}
-                            >
-                              {copiedId === `manual-${result.itemId}` ? (
-                                <Check className="w-4 h-4" />
-                              ) : (
-                                <Copy className="w-4 h-4" />
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                        {result.reviewedAt && (
-                          <p className="text-xs text-slate-500 mt-1">
-                            Reviewed {new Date(result.reviewedAt).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-semibold text-slate-700">Item</th>
+                      <th className="px-4 py-2 text-left font-semibold text-slate-700">Content</th>
+                      <th className="px-4 py-2 text-left font-semibold text-slate-700">Label</th>
+                      <th className="px-4 py-2 text-center font-semibold text-slate-700">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.results.map((result: any, index: number) => {
+                      const label = result.manualLabel || (typeof result.predictedLabel === "object" ? result.predictedLabel.label || result.predictedLabel : result.predictedLabel);
+                      return (
+                        <tr key={result.itemId} className="border-b hover:bg-slate-50">
+                          <td className="px-4 py-2 text-slate-600">#{index + 1}</td>
+                          <td className="px-4 py-2 text-slate-700 truncate max-w-xs">
+                            {result.content || result.fileUrl || "—"}
+                          </td>
+                          <td className="px-4 py-2">
+                            <Badge variant="outline" className="font-mono">
+                              {label || "—"}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-2 text-center">
+                            {label && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleCopyLabel(label, `label-${result.itemId}`)}
+                              >
+                                {copiedId === `label-${result.itemId}` ? (
+                                  <Check className="w-4 h-4" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         ) : (

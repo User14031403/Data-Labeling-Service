@@ -42,6 +42,8 @@
 - [x] Implement dynamic task display (active/completed/failed tabs with auto-refresh)
 - [x] Build task results viewer to show labeled data with export (JSON/CSV)
 - [x] Build export functionality (JSON, CSV)
+- [x] Simplify results display to show only category labels
+- [x] Fix batch API to work with API keys and submissions
 - [ ] Build label review and editing interface
 
 ## Phase 6: Notifications and Testing
