@@ -1,6 +1,16 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  InsertUser,
+  users,
+  datasets,
+  datasetItems,
+  labelingTasks,
+  labelTaxonomy,
+  labels,
+  batchJobs,
+  apiKeys,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +99,163 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Dataset queries
+export async function createDataset(input: {
+  name: string;
+  description?: string;
+  dataType: "text" | "image" | "audio" | "mixed";
+  ownerId: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(datasets).values(input);
+  return result;
+}
+
+export async function getDatasetById(datasetId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(datasets).where(eq(datasets.id, datasetId)).limit(1);
+}
+
+export async function getUserDatasets(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(datasets).where(eq(datasets.ownerId, userId));
+}
+
+// Dataset items queries
+export async function createDatasetItem(input: {
+  datasetId: number;
+  content?: string;
+  fileUrl?: string;
+  fileKey?: string;
+  mimeType?: string;
+  metadata?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(datasetItems).values(input);
+}
+
+export async function getDatasetItems(datasetId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(datasetItems).where(eq(datasetItems.datasetId, datasetId));
+}
+
+// Labeling task queries
+export async function createLabelingTask(input: {
+  datasetId: number;
+  taxonomyId: number;
+  name: string;
+  description?: string;
+  totalItems: number;
+  createdBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(labelingTasks).values(input);
+}
+
+export async function getLabelingTask(taskId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(labelingTasks).where(eq(labelingTasks.id, taskId)).limit(1);
+}
+
+export async function updateLabelingTaskProgress(taskId: number, processedItems: number, status?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updates: any = { processedItems };
+  if (status) updates.status = status;
+  return db.update(labelingTasks).set(updates).where(eq(labelingTasks.id, taskId));
+}
+
+// Label taxonomy queries
+export async function createLabelTaxonomy(input: {
+  name: string;
+  dataType: "text" | "image" | "audio";
+  description?: string;
+  labels: string; // JSON array
+  createdBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(labelTaxonomy).values(input);
+}
+
+export async function getLabelTaxonomy(taxonomyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(labelTaxonomy).where(eq(labelTaxonomy.id, taxonomyId)).limit(1);
+}
+
+export async function getTaxonomiesByDataType(dataType: "text" | "image" | "audio") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(labelTaxonomy).where(eq(labelTaxonomy.dataType, dataType));
+}
+
+// Labels queries
+export async function createLabel(input: {
+  itemId: number;
+  taskId: number;
+  predictedLabel?: string;
+  confidence?: number;
+  source: "ai" | "manual" | "hybrid";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(labels).values(input);
+}
+
+export async function getItemLabels(itemId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(labels).where(eq(labels.itemId, itemId));
+}
+
+export async function updateLabel(labelId: number, updates: { manualLabel?: string; reviewedBy?: number; reviewedAt?: Date }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(labels).set(updates).where(eq(labels.id, labelId));
+}
+
+// Batch job queries
+export async function createBatchJob(input: {
+  batchId: string;
+  userId: number;
+  dataType: "text" | "image" | "audio";
+  taxonomyId: number;
+  totalItems: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(batchJobs).values(input);
+}
+
+export async function getBatchJob(batchId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(batchJobs).where(eq(batchJobs.batchId, batchId)).limit(1);
+}
+
+export async function updateBatchJob(batchId: string, updates: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(batchJobs).set(updates).where(eq(batchJobs.batchId, batchId));
+}
+
+// API key queries
+export async function createApiKey(input: { userId: number; keyHash: string; name: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(apiKeys).values(input);
+}
+
+export async function getUserApiKeys(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(apiKeys).where(eq(apiKeys.userId, userId));
+}
