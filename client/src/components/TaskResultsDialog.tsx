@@ -33,12 +33,16 @@ export default function TaskResultsDialog({ open, onOpenChange, taskId }: TaskRe
     if (typeof label === "boolean") return String(label);
     if (typeof label === "number") return String(label);
     if (typeof label === "object") {
-      // Prioritize category field for display
+      // Check for classification.category (from AI labeling result)
+      if (label.classification && typeof label.classification === "object" && label.classification.category) {
+        return label.classification.category;
+      }
+      // Check for direct category field
       if (label.category) return label.category;
-      // Fallback to other common label field names
+      // Check for label field (from image classification)
       if (label.label) return label.label;
+      // Fallback to sentiment
       if (label.sentiment) return label.sentiment;
-      if (label.classification) return label.classification;
       // Fallback: return first non-object value
       for (const [key, value] of Object.entries(label)) {
         if (typeof value === "string") return value;

@@ -7,12 +7,16 @@ function extractLabel(label: any): string {
   if (typeof label === "boolean") return String(label);
   if (typeof label === "number") return String(label);
   if (typeof label === "object") {
-    // Prioritize category field for display
+    // Check for classification.category (from AI labeling result)
+    if (label.classification && typeof label.classification === "object" && label.classification.category) {
+      return label.classification.category;
+    }
+    // Check for direct category field
     if (label.category) return label.category;
-    // Fallback to other common label field names
+    // Check for label field (from image classification)
     if (label.label) return label.label;
+    // Fallback to sentiment
     if (label.sentiment) return label.sentiment;
-    if (label.classification) return label.classification;
     // Fallback: return first non-object value
     for (const [key, value] of Object.entries(label)) {
       if (typeof value === "string") return value;
@@ -29,12 +33,12 @@ describe("Label Extraction", () => {
     expect(extractLabel("neutral")).toBe("neutral");
   });
 
-  it("should extract category as primary field", () => {
-    const obj = { category: "theorem", sentiment: "positive", confidence: 0.95 };
+  it("should extract classification.category as primary", () => {
+    const obj = { classification: { category: "theorem", confidence: 0.95 }, sentiment: "neutral", confidence: 0.9 };
     expect(extractLabel(obj)).toBe("theorem");
   });
 
-  it("should extract category from text labeling result", () => {
+  it("should extract category field when classification not present", () => {
     const obj = { category: "operation", sentiment: "neutral", entities: [], confidence: 0.92 };
     expect(extractLabel(obj)).toBe("operation");
   });
@@ -56,13 +60,13 @@ describe("Label Extraction", () => {
 
   it("should handle complex labeling object with multiple fields", () => {
     const obj = {
-      sentiment: "positive",
+      classification: { category: "definition", confidence: 0.92 },
+      sentiment: "neutral",
       entities: ["entity1", "entity2"],
-      classification: "review",
       language: "en",
       confidence: 0.9,
     };
-    expect(extractLabel(obj)).toBe("positive");
+    expect(extractLabel(obj)).toBe("definition");
   });
 
   it("should return first string value as fallback", () => {
@@ -82,10 +86,10 @@ describe("Label Extraction", () => {
 
   it("should handle nested objects", () => {
     const obj = {
-      category: "product",
+      classification: { category: "theorem", confidence: 0.95 },
       metadata: { nested: { value: "ignored" } },
     };
-    expect(extractLabel(obj)).toBe("product");
+    expect(extractLabel(obj)).toBe("theorem");
   });
 
   it("should handle numeric values", () => {
