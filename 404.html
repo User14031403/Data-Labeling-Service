@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting...</title>
+    <script>
+        // GitHub Pages 404 redirect to index.html for client-side routing
+        const path = window.location.pathname;
+        const segments = path.split('/').filter(Boolean);
+        
+        // Remove 'Data-Labeling-Service' from segments if present
+        if (segments[0] === 'Data-Labeling-Service') {
+            segments.shift();
+        }
+        
+        // Reconstruct the path without the repository name
+        const route = '/' + segments.join('/');
+        
+        // Redirect to index.html with the original path as a query parameter
+        window.location.replace('/Data-Labeling-Service/index.html?redirect=' + encodeURIComponent(route));
+    </script>
+</head>
+<body>
+    <p>Redirecting...</p>
+</body>
+</html>
