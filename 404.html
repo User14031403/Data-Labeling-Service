@@ -5,20 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Redirecting...</title>
     <script>
-        // GitHub Pages 404 redirect to index.html for client-side routing
+        // Redirect all 404s to index.html with the original path preserved
         const path = window.location.pathname;
-        const segments = path.split('/').filter(Boolean);
         
-        // Remove 'Data-Labeling-Service' from segments if present
-        if (segments[0] === 'Data-Labeling-Service') {
-            segments.shift();
-        }
+        // Store the original path in sessionStorage
+        sessionStorage.setItem('redirectPath', path);
         
-        // Reconstruct the path without the repository name
-        const route = '/' + segments.join('/');
-        
-        // Redirect to index.html with the original path as a query parameter
-        window.location.replace('/Data-Labeling-Service/index.html?redirect=' + encodeURIComponent(route));
+        // Redirect to index.html
+        window.location.replace('/Data-Labeling-Service/index.html');
     </script>
 </head>
 <body>
